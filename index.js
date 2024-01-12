@@ -7,14 +7,22 @@ const webpush = require('web-push');
 const moment = require('moment-timezone');
 const helpers = require('./helperfunctions')
 let cors = require('cors');
+const { Console } = require('console');
 
 const app = Express()
+
+app.use(Express.json())
+app.use(cors({"origin": "*"}))
 
 webpush.setVapidDetails(
     "mailto:codebreakers1306@gmail.com",
     process.env.PUBLIC_KEY,
     process.env.PRIVATE_KEY
 )
+
+app.get("/", (req, res) => {
+    res.send("Server is up and running").end()
+})
 
 app.get('/notify', async (req, res) => {
     // Getting subscription URL from database
@@ -48,34 +56,76 @@ app.get('/notify', async (req, res) => {
     })
 })
 
-// app.get("/addSchedule", (req, res) => {
-//     const userId = '6415d631ed97f5d33459bd65'
-//     const name = 'morning'
-//     const id =  helpers.generateId(userId.substring(userId.length - 4), name)
-//     console.log('Id generated is ', id)
-//     const payload = {
-//         job: {
-//             id: id,
-//             title: "Job creation testing!",
-//             url: process.env.CRONJOBENDPOINT,
-//             requestTimeout: 5,
-//             schedule: {
-//                 timezone: "Indian/Maldives",
-//                 expiresAt: 0,
-//                 hours: 
-//             }
-//         }
-//     }
+app.post("/addSchedule", (req, res) => {
+    var {title, hours, mdays, minutes, months, wdays , id} = req.body
+    var {hours, minutes} = helpers.correctTime(hours, minutes)
 
-//     fetch(process.env.CRONJOBENDPOINT, {
-//         method: PUT,
-//         headers: {
-//             'Authorization': process.env.CRONJOBAUTHKEY,
-//             'Content-Type': 'application/json'
-//         },
-//         body: json.stringify(payload)
-//     })
-// }) 
+    const payload = {
+        job:{
+            enabled: true,
+            title,
+            saveResponses: false,
+            url: process.env.NOTIF_SERVER + id,
+            requestTimeout: 5000,
+            schedule: {
+                timezone: "Indian/Maldives",
+                expiresAt: 0,
+                hours: [hours],
+                mdays: [-1],
+                minutes: [minutes],
+                months: [-1],
+                wdays: [-1]
+            }
+        }
+    }
+    console.log("Logging process")
+    fetch(process.env.CRONJOBENDPOINT + 'jobs', {
+        method: "PUT",
+        headers: {
+            'Authorization': "Bearer " + process.env.CRONJOBAUTHKEY,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(resp => res.status(resp.status).json({response: `Job scheduled successfully! with status ${resp.status}`}).end() )
+    .catch(err => res.status(500).json({response: "Internal Server Error!"}).end())
+}) 
+
+app.get('/listJobs', (req, res) => {
+    id ='2465131518149147'
+    const jobid = req.query.jobid
+    fetch(process.env.CRONJOBENDPOINT + 'jobs', {
+        method: "GET",
+        headers: {
+            'Authorization': "Bearer " + process.env.CRONJOBAUTHKEY,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        res.json({"result": data})
+    })
+    .catch(err => res.json({"error": err}))
+})
+
+app.get('/deleteJob', (req, res) => {
+    jobId = req.query.jobid
+    fetch(process.env.CRONJOBENDPOINT + 'jobs/' + jobId, {
+        method: "DELETE",
+        headers: {
+            'Authorization': "Bearer " + process.env.CRONJOBAUTHKEY,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(resp => {
+        console.log(resp)
+        res.send(`${jobId} job deleted successfully! with status ${resp.status}`).end()
+    })
+    .catch(err => {
+        console.log(err)
+        res.status(500).send("Failed to delete job").end()
+    })
+})
 
 app.listen(process.env.PORT || 4000, () => {
     console.log(`Listening on port ${process.env.PORT || 4000}`)

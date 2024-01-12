@@ -1,6 +1,7 @@
 require('dotenv').config()
 const { ObjectId } = require('mongodb');
-const {connectDB} = require('./connection')
+const {connectDB} = require('./connection');
+const { min } = require('moment-timezone');
 
 const chmap = {
     "a": 1, "b": 2,"c": 3,"d": 4,"e": 5,"f": 6,"g": 7,"h": 8, "i": 9,"j": 10, "k": 11,"l": 12,"m": 13, "n": 14,"o": 15,
@@ -26,7 +27,8 @@ module.exports.fetchSubscription = function (userId){
     })
 }
 
-module.exports.generateId = function (id, name) {
+// THIS METHOD OF GENERATING UNIQUE ID IS NOT IN USE AS OF NOW.
+module.exports.generateId = function (id) {
     const nums = "0123456789";
     let ans = ''
     for (let i = 0; i < id.length; i++) {
@@ -38,9 +40,17 @@ module.exports.generateId = function (id, name) {
         }
     }
 
-    for (let i = 0; i < name.length; i++){
-        let ch = name[i];
-        ans += chmap[ch];
-    }
     return Number(ans);
+}
+
+module.exports.correctTime = function(hours, minutes){
+    diff = minutes - 30
+    if (diff < 0){
+        hours -= 1;
+        minutes = 60 + diff
+    } else {
+        minutes -= 30
+    }
+
+    return {hours, minutes}
 }
