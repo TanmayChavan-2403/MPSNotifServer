@@ -27,9 +27,9 @@ app.get("/", (req, res) => {
 app.get('/notify', async (req, res) => {
     // Getting subscription URL from database
     helpers.fetchSubscription(req.query.id)
-    .then((subscription) => {
+    .then(([subscription, word]) => {
         let payload = JSON.stringify({
-            title: '🔔 Todays word:- ' + "Test meaning",
+            title: '🔔 Todays word:- ' + word,
             body: "Test body",
             flag: false,
             link: "https://my-meanings-server.onrender.com/sendLogFile"

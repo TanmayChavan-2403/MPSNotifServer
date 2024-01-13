@@ -2,6 +2,7 @@ require('dotenv').config()
 const { ObjectId } = require('mongodb');
 const {connectDB} = require('./connection');
 const { min } = require('moment-timezone');
+const { json } = require('express');
 
 const chmap = {
     "a": 1, "b": 2,"c": 3,"d": 4,"e": 5,"f": 6,"g": 7,"h": 8, "i": 9,"j": 10, "k": 11,"l": 12,"m": 13, "n": 14,"o": 15,
@@ -15,12 +16,20 @@ module.exports.fetchSubscription = function (userId){
 
         // using the 'UserData' database
         const db = mongo.db("UserData")
+
         // getting 'credentials' collection
         const users = db.collection('credentials');
         const id = new ObjectId(userId)
         const data = await users.findOne({_id: id});
         if (data['subscriptionURL']){
-            resolve(JSON.parse(data['subscriptionURL']));
+            // getting 'notifications' collection
+            const notif = db.collection('notifications')
+            const result = await notif.aggregate([
+                {$match: {_id: id}},
+                {$project: {_id: 1, word: {$arrayElemAt: ["$firstRevision", 0]}}}
+            ])
+            const jsonData = await result.toArray()
+            resolve([JSON.parse(data['subscriptionURL']), jsonData[0].word]);
         } else {
             reject("Subscription not found")
         }
