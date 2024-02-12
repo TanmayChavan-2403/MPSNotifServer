@@ -25,6 +25,7 @@ app.get("/", (req, res) => {
 })
 
 app.get('/notify', async (req, res) => {
+    // Example id = 6415d631ed97f5d33459bd65
     // Getting subscription URL from database
     helpers.fetchSubscription(req.query.id)
     .then(([subscription, word]) => {
@@ -125,6 +126,10 @@ app.get('/deleteJob', (req, res) => {
         console.log(err)
         res.status(500).send("Failed to delete job").end()
     })
+})
+
+app.get('/fetchLists', (req, res) => {
+    
 })
 
 app.listen(process.env.PORT || 4000, () => {
