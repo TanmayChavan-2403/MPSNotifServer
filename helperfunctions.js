@@ -21,17 +21,41 @@ module.exports.fetchSubscription = function (userId){
         const users = db.collection('credentials');
         const id = new ObjectId(userId)
         const data = await users.findOne({_id: id});
-        if (data['subscriptionURL']){
+
+        if (data['notificationTurnedOn']){
             // getting 'notifications' collection
-            const notif = db.collection('notifications')
-            const result = await notif.aggregate([
-                {$match: {_id: id}},
-                {$project: {_id: 1, word: {$arrayElemAt: ["$firstRevision", 0]}}}
-            ])
-            const jsonData = await result.toArray()
-            resolve([JSON.parse(data['subscriptionURL']), jsonData[0].word]);
+            const notifCollection = db.collection('notifications')
+            const document = await notifCollection.findOne({_id: id})
+            if (!document){
+                return reject(`Document not found for userid ${id}`);
+            }
+
+            let movedObject, fromRevision, toRevision = null;
+
+            let revisions = ['firstRevision', 'secondRevision', 'thirdRevision', 'fourthRevision', 'fifthRevision'];
+            for (let i = 0; i < revisions.length; i ++){
+                if (revisions[i].length > 0){
+                    movedObject = document[revisions[i]][0];
+                    fromRevision = revisions[i];
+                    toRevision = i + 1 < revisions.length-1 ? revisions[i+1] : null;
+                    break;
+                }
+            }
+
+            if (!movedObject){
+                return resolve([JSON.parse(data['subscriptionURL']), null]);
+            }
+            let updateQuery;
+            if (toRevision){
+                updateQuery = {$pull: {[fromRevision]: movedObject}, $push: {[toRevision]: movedObject}};
+            } else {
+                updateQuery = {$pull: {[fromRevision]: movedObject}};
+            }
+            notifCollection.updateOne({_id: id}, updateQuery)
+            
+            resolve([JSON.parse(data['subscriptionURL']), movedObject]);
         } else {
-            reject("Subscription not found")
+            reject("Subscription not found");
         }
     })
 }

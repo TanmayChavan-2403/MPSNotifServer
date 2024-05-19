@@ -1,6 +1,5 @@
 require('dotenv').config();
 const fs = require('fs')
-
 const path = require('path');
 const Express = require('express');
 const webpush = require('web-push');
@@ -29,23 +28,25 @@ app.get('/notify', async (req, res) => {
     // Getting subscription URL from database
     helpers.fetchSubscription(req.query.id)
     .then(([subscription, word]) => {
+        if (!word){
+            word = {"Empty collection": "Please add words to notify"}
+        }
         let payload = JSON.stringify({
-            title: '🔔 Todays word:- ' + word,
-            body: "Test body",
+            title: '🔔 Todays word:- ' + Object.keys(word)[0],
+            body: Object.values(word)[0],
             flag: false,
-            link: "https://my-meanings-server.onrender.com/sendLogFile"
+            link: "https://tanmaychavan2403.web.app/"
         })
     
         webpush.sendNotification(subscription, payload)
         .then(data => {
             res.json({
                 notified: 'Success',
-                CurrentDataCount: 0,
-                NotificationSent: "Word" + ':   ' + "and its meaning",
+                NotificationSent: Object.keys(word)[0] + ':  ' + Object.values(word)[0],
             })
         })
         .catch(err => {
-            console.log(err)
+            console.log(err);
             res.json({
                 notified: 'Failed',
                 error: err
@@ -54,11 +55,14 @@ app.get('/notify', async (req, res) => {
     })
     .catch(err => {
         console.log(err);
+        res.json({
+            err
+        })
     })
 })
 
 app.post("/addSchedule", (req, res) => {
-    var {title, hours, mdays, minutes, months, wdays , id} = req.body
+    var {title, minutes, hours, mdays, wdays, months , id} = req.body
     var {hours, minutes} = helpers.correctTime(hours, minutes)
 
     const payload = {
@@ -79,7 +83,7 @@ app.post("/addSchedule", (req, res) => {
             }
         }
     }
-    console.log("Logging process")
+    
     fetch(process.env.CRONJOBENDPOINT + 'jobs', {
         method: "PUT",
         headers: {
@@ -88,9 +92,16 @@ app.post("/addSchedule", (req, res) => {
         },
         body: JSON.stringify(payload)
     })
-    .then(resp => res.status(resp.status).json({response: `Job scheduled successfully! with status ${resp.status}`}).end() )
-    .catch(err => res.status(500).json({response: "Internal Server Error!"}).end())
-}) 
+    .then(resp => {
+        return resp.json()
+    })
+    .then(data => {
+        res.status(200).json({jobId: data.jobId }).end()
+    })
+    .catch(err => {
+        res.status(500).json({response: "Internal Server Error!"}).end()
+    })
+})
 
 app.get('/listJobs', (req, res) => {
     id ='2465131518149147'
