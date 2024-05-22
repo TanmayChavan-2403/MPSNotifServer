@@ -34,7 +34,7 @@ module.exports.fetchSubscription = function (userId){
 
             let revisions = ['firstRevision', 'secondRevision', 'thirdRevision', 'fourthRevision', 'fifthRevision'];
             for (let i = 0; i < revisions.length; i ++){
-                if (revisions[i].length > 0){
+                if (document[revisions[i]].length > 0){
                     movedObject = document[revisions[i]][0];
                     fromRevision = revisions[i];
                     toRevision = i + 1 < revisions.length-1 ? revisions[i+1] : null;

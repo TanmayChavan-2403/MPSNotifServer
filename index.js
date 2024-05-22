@@ -130,11 +130,9 @@ app.get('/deleteJob', (req, res) => {
         }
     })
     .then(resp => {
-        console.log(resp)
         res.send(`${jobId} job deleted successfully! with status ${resp.status}`).end()
     })
     .catch(err => {
-        console.log(err)
         res.status(500).send("Failed to delete job").end()
     })
 })
