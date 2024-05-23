@@ -76,10 +76,10 @@ app.post("/addSchedule", (req, res) => {
                 timezone: "Indian/Maldives",
                 expiresAt: 0,
                 hours: [hours],
-                mdays: [-1],
+                mdays: [mdays],
                 minutes: [minutes],
-                months: [-1],
-                wdays: [-1]
+                months: [months],
+                wdays: [wdays]
             }
         }
     }
@@ -96,7 +96,7 @@ app.post("/addSchedule", (req, res) => {
         return resp.json()
     })
     .then(data => {
-        res.status(200).json({jobId: data.jobId }).end()
+        res.status(200).json({title, jobId: data.jobId }).end()
     })
     .catch(err => {
         res.status(500).json({response: "Internal Server Error!"}).end()
