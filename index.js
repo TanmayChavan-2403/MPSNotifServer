@@ -120,25 +120,26 @@ app.get('/listJobs', (req, res) => {
     .catch(err => res.json({"error": err}))
 })
 
-app.get('/deleteJob', (req, res) => {
-    jobId = req.query.jobid
-    fetch(process.env.CRONJOBENDPOINT + 'jobs/' + jobId, {
-        method: "DELETE",
-        headers: {
-            'Authorization': "Bearer " + process.env.CRONJOBAUTHKEY,
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(resp => {
-        res.send(`${jobId} job deleted successfully! with status ${resp.status}`).end()
-    })
-    .catch(err => {
-        res.status(500).send("Failed to delete job").end()
-    })
-})
-
-app.get('/fetchLists', (req, res) => {
+app.delete('/deleteJob', (req, res) => {
     
+    jobId = req.body['jobid']
+    setTimeout(() => {
+        res.sendStatus(200).end()
+    }, 1500);
+
+    // fetch(process.env.CRONJOBENDPOINT + 'jobs/' + jobId, {
+    //     method: "DELETE",
+    //     headers: {
+    //         'Authorization': "Bearer " + process.env.CRONJOBAUTHKEY,
+    //         'Content-Type': 'application/json'
+    //     }
+    // })
+    // .then(resp => {
+    //     res.sendStatus(resp.status).end()
+    // })
+    // .catch(err => {
+    //     res.sendStatus(500).end()
+    // })
 })
 
 app.listen(process.env.PORT || 4000, () => {
