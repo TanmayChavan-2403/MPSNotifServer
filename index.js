@@ -123,23 +123,23 @@ app.get('/listJobs', (req, res) => {
 app.delete('/deleteJob', (req, res) => {
     
     jobId = req.body['jobid']
-    setTimeout(() => {
-        res.sendStatus(200).end()
-    }, 1500);
+    // setTimeout(() => {
+    //     res.sendStatus(200).end()
+    // }, 1500);
 
-    // fetch(process.env.CRONJOBENDPOINT + 'jobs/' + jobId, {
-    //     method: "DELETE",
-    //     headers: {
-    //         'Authorization': "Bearer " + process.env.CRONJOBAUTHKEY,
-    //         'Content-Type': 'application/json'
-    //     }
-    // })
-    // .then(resp => {
-    //     res.sendStatus(resp.status).end()
-    // })
-    // .catch(err => {
-    //     res.sendStatus(500).end()
-    // })
+    fetch(process.env.CRONJOBENDPOINT + 'jobs/' + jobId, {
+        method: "DELETE",
+        headers: {
+            'Authorization': "Bearer " + process.env.CRONJOBAUTHKEY,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(resp => {
+        res.sendStatus(resp.status).end()
+    })
+    .catch(err => {
+        res.sendStatus(500).end()
+    })
 })
 
 app.listen(process.env.PORT || 4000, () => {
